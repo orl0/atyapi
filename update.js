@@ -8,10 +8,7 @@ const fetchAPI = async (url) => {
     const data = await res.json();
     return data;
   } catch (err) {
-    console.log("Error");
     console.error(err);
-    console.dir(err);
-    throw new Error("Fetch Failed!");
   }
 };
 
