@@ -1,14 +1,16 @@
 {
-  "name": "atyapi",
+  "name": "soldat2-gatherbot-atyapi",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "JSON server used to fetch API data from Soldat2 Gatherbot and format a new API responses",
+  "repository": "github:orl0/atyapi",
+  "bugs": "https://github.com/orl0/atyapi/issues",
+  "main": "",
   "scripts": {
     "update": "node update",
     "start": "node server"
   },
   "keywords": [],
-  "author": "",
+  "author": "Roman Orlovsky (https://github.com/orl0)",
   "license": "ISC",
   "dependencies": {
     "json-server": "^0.16.3",
