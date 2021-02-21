@@ -7,6 +7,6 @@ const middlewares = jsonServer.defaults();
 server.use(middlewares);
 
 server.use("/api/v2", router);
-server.listen(3000, () => {
+server.listen(9000, () => {
   console.log("JSON Server is running");
 });
