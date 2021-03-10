@@ -1,5 +1,17 @@
 const fs = require("fs");
 const path = require("path");
+
+const dbFile = path.join(__dirname, "db.json");
+const dbStats = fs.statSync(dbFile);
+
+const daysSinceLastUpdate = (Date.now() - dbStats.mtime) / 1000 / 60 / 60 / 24;
+if (daysSinceLastUpdate < 1) process.exit(0);
+
+if (!process.env.API_BASE_URL) throw new Error("API_BASE_URL env is required!");
+
+const weaponsAPI = process.env.API_BASE_URL + "weapons";
+const gathersAPI = process.env.API_BASE_URL + "gathers/per_day";
+
 const fetch = require("node-fetch");
 
 const fetchAPI = async (url) => {
@@ -12,11 +24,9 @@ const fetchAPI = async (url) => {
   }
 };
 
-const urls = ["weapons", "gathers/per_day"].map((a) => process.env.API_BASE_URL + a);
-
-fetchAPI(urls[0]).then((weapons) => {
+fetchAPI(weaponsAPI).then((weapons) => {
   console.log("Rounds:", weapons.length);
-  fetchAPI(urls[1]).then((gathersPerDay) => {
+  fetchAPI(gathersAPI).then((gathersPerDay) => {
     console.log("Gathers per day:", gathersPerDay.length);
 
     let i = 0;
@@ -52,6 +62,6 @@ fetchAPI(urls[0]).then((weapons) => {
       rounds,
     };
 
-    fs.writeFileSync(path.join(__dirname, "db.json"), JSON.stringify(db), "utf8");
+    fs.writeFileSync(dbFile, JSON.stringify(db), "utf8");
   });
 });
