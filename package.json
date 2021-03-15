@@ -13,6 +13,7 @@
   "author": "Roman Orlovsky (https://github.com/orl0)",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^8.2.0",
     "json-server": "^0.16.3",
     "node-fetch": "^2.6.1"
   }
