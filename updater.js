@@ -1,17 +1,3 @@
-const fs = require("fs");
-const path = require("path");
-
-const dbFile = path.join(__dirname, "db.json");
-const dbStats = fs.statSync(dbFile);
-
-const daysSinceLastUpdate = (Date.now() - dbStats.mtime) / 1000 / 60 / 60 / 24;
-if (daysSinceLastUpdate < 1) process.exit(0);
-
-if (!process.env.API_BASE_URL) throw new Error("API_BASE_URL env is required!");
-
-const weaponsAPI = process.env.API_BASE_URL + "weapons";
-const gathersAPI = process.env.API_BASE_URL + "gathers/per_day";
-
 const fetch = require("node-fetch");
 
 const fetchAPI = async (url) => {
@@ -24,44 +10,46 @@ const fetchAPI = async (url) => {
   }
 };
 
-fetchAPI(weaponsAPI).then((weapons) => {
-  console.log("Rounds:", weapons.length);
-  fetchAPI(gathersAPI).then((gathersPerDay) => {
-    console.log("Gathers per day:", gathersPerDay.length);
+module.exports = async function (baseUrl) {
+  const weaponsAPI = baseUrl + "weapons";
+  const gathersAPI = baseUrl + "gathers/per_day";
 
-    let i = 0;
+  return await fetchAPI(weaponsAPI).then((weapons) => {
+    // console.log("Rounds:", weapons.length);
+    return fetchAPI(gathersAPI).then((gathersPerDay) => {
+      // console.log("Gathers per day:", gathersPerDay.length);
 
-    const rounds = [];
-    const games = gathersPerDay.reduce((acc, gather) => {
-      gather.games?.forEach((game) => {
-        game.id = game._id;
-        delete game._id;
-        game.rounds.forEach((round) => {
-          round.gameId = game.id;
-          if (round.startTime === weapons[i].startTime) {
-            const weaponKills = weapons[i].weapons;
-            round.id = i;
-            round.killsByWeapon = {};
-            Object.keys(weaponKills).forEach((k) => {
-              round.killsByWeapon[k] = weaponKills[k].kills;
-            });
-          } else {
-            console.error("Rounds startTime mismatch!");
-          }
-          rounds.push(round);
-          i++;
+      let roundID = 0;
+      // let gameID = 0;
+
+      const rounds = [];
+      const games = gathersPerDay.reduce((acc, gather) => {
+        gather.games?.forEach((game) => {
+          game.id = game._id;
+          delete game._id;
+          game.rounds?.forEach((round) => {
+            const roundSorted = {};
+            if (round.startTime === weapons[roundID].startTime) {
+              const weaponKills = weapons[roundID].weapons;
+              roundSorted.id = roundID;
+              Object.keys(round).forEach((k) => (roundSorted[k] = round[k]));
+              roundSorted.gameId = game.id;
+              roundSorted.killsByWeapon = {};
+              Object.keys(weaponKills).forEach((k) => {
+                roundSorted.killsByWeapon[k] = weaponKills[k].kills;
+              });
+            } else {
+              console.error("Rounds startTime mismatch!");
+            }
+            rounds.push(roundSorted);
+            roundID++;
+          });
+          delete game.rounds;
+          acc.push(game);
         });
-        delete game.rounds;
-        acc.push(game);
-      });
-      return acc;
-    }, []);
-
-    const db = {
-      games,
-      rounds,
-    };
-
-    fs.writeFileSync(dbFile, JSON.stringify(db), "utf8");
+        return acc;
+      }, []);
+      return { lastUpdate: Date.now(), rounds, games };
+    });
   });
-});
+};
