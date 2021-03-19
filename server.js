@@ -27,23 +27,23 @@ const adapter = new myFileAsync(dbFile, {
 });
 const dbPromise = low(adapter);
 
-dbPromise.then((db) => {
-  const lastUpdate = new Date(db.get("lastUpdate").defaultTo(0).value());
-  console.log(`Last update time: ${lastUpdate}`);
+const oneDay = 1000 * 60 * 60 * 24;
+// const oneDay = 1000 * 60; // 1 min for debug
 
-  // const oneDay = 1000 * 60 * 60 * 24;
-  const oneDay = 1000 * 60; // 1 min for debug
+dbPromise.then(async (db) => {
+  const lastUpdate = getDBUpdateDate(db);
+  console.log(`Last update time: ${lastUpdate}`);
 
   if (Date.now() > +lastUpdate + oneDay) {
     console.log(`Updating...`);
-    updateDatabase(gatherAPIBaseUrl).then((data) => {
-      db.setState(data).write();
-      console.log(`'${adapter.source}' is successfully updated!`);
-    });
+    data = await updateDatabase(gatherAPIBaseUrl);
+    await db.setState(data).write();
+    console.log(`'${adapter.source}' is successfully updated!`);
   } else {
-    console.log(`Update is not required...`);
-    // startJSONServer(db);
+    console.log(`Update is not required.`);
   }
+
+  startJSONServer(db);
 });
 
 function startJSONServer(db) {
@@ -54,10 +54,14 @@ function startJSONServer(db) {
 
   server.use(middlewares);
 
+  const lastUpdate = getDBUpdateDate(db);
+
   server.use((req, res, next) => {
     res.header("Last-Modified", lastUpdate.toUTCString());
 
-    if (Date.now() > +lastUpdate + oneDay) console.log(`Update is needed!`);
+    if (Date.now() > +lastUpdate + oneDay) {
+      setTimeout(() => console.log(`Update is needed!`), 5000);
+    }
 
     next();
   });
@@ -67,4 +71,8 @@ function startJSONServer(db) {
   server.listen(9000, () => {
     console.log("JSON Server is running");
   });
+}
+
+function getDBUpdateDate(db) {
+  return new Date(db.get("__db__.lastUpdate").defaultTo(0).value());
 }
