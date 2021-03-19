@@ -49,7 +49,7 @@ module.exports = async function (baseUrl) {
         });
         return acc;
       }, []);
-      return { lastUpdate: Date.now(), rounds, games };
+      return { __db__: { lastUpdate: Date.now() }, rounds, games };
     });
   });
 };
