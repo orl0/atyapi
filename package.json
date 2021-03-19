@@ -8,7 +8,8 @@
   "scripts": {
     "update": "node update",
     "update-force": "npm run update --force-update",
-    "start": "node server"
+    "start": "node server",
+    "release": "standard-version"
   },
   "keywords": [],
   "author": "Roman Orlovsky (https://github.com/orl0)",
@@ -17,5 +18,11 @@
     "dotenv": "^8.2.0",
     "json-server": "^0.16.3",
     "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "husky": "^4.3.8",
+    "@commitlint/cli": "^12.0.1",
+    "@commitlint/config-conventional": "^12.0.1",
+    "standard-version": "^9.1.1"
   }
 }
